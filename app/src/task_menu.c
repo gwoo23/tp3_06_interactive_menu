@@ -60,12 +60,30 @@
 #define DEL_MEN_XX_MAX				500ul
 
 /********************** internal data declaration ****************************/
+
+typedef struct
+{
+	int parameter;
+	bool power;
+	int speed;
+	bool spin;
+} motor_t;
+
 task_menu_dta_t task_menu_dta =
-	{DEL_MEN_XX_MIN, ST_MEN_XX_IDLE, EV_MEN_ENT_IDLE, false};
+	{DEL_MEN_XX_MIN, ST_MEN_XX_IDLE, EV_MEN_ENT_IDLE, false, 0, 1, false, 0, false};
 
 #define MENU_DTA_QTY	(sizeof(task_menu_dta)/sizeof(task_menu_dta_t))
 
 /********************** internal functions declaration ***********************/
+
+void init_motor (motor_t * motor){
+
+
+	motor -> parameter = 1;
+	motor -> power = false;
+	motor -> speed = 0;
+	motor -> spin = false;
+}
 
 /********************** internal data definition *****************************/
 const char *p_task_menu 		= "Task Menu (Interactive Menu)";
@@ -126,6 +144,14 @@ void task_menu_update(void *parameters)
 	task_menu_dta_t *p_task_menu_dta;
 	bool b_time_update_required = false;
 	char menu_str[8];
+	motor_t motors[QTY_MOTORS];
+
+
+	for(int i = 0 ; i< QTY_MOTORS ; i++)
+	{
+		init_motor(&motors[i]);
+	}
+
 
 	/* Update Task Menu Counter */
 	g_task_menu_cnt++;
@@ -175,24 +201,141 @@ void task_menu_update(void *parameters)
 				p_task_menu_dta->event = get_event_task_menu();
 			}
 
+
 			switch (p_task_menu_dta->state)
 			{
-				case ST_MEN_XX_IDLE:
+				case ST_MENU_1:
 
-					if ((true == p_task_menu_dta->flag) && (EV_MEN_ENT_ACTIVE == p_task_menu_dta->event))
+					// actions - next
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event && p_task_menu_dta->id_motor < QTY_MOTORS)
 					{
-						p_task_menu_dta->flag = false;
-						p_task_menu_dta->state = ST_MEN_XX_ACTIVE;
+						p_task_menu_dta->id_motor ++;
 					}
+
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event && p_task_menu_dta->id_motor >= QTY_MOTORS)
+					{
+						p_task_menu_dta->id_motor = 0;
+					}
+
+					// actions - enter
+					if (EV_MEN_ENT_ACTIVE == p_task_menu_dta->event)
+					{
+						p_task_menu_dta->state = ST_MENU_2;
+					}
+
+					// actions - esc
+					if(EV_MEN_ESC_ACTIVE == p_task_menu_dta->event)
+					{
+						p_task_menu_dta->state = ST_MENU_1;
+					}
+
 
 					break;
 
-				case ST_MEN_XX_ACTIVE:
-
-					if ((true == p_task_menu_dta->flag) && (EV_MEN_ENT_IDLE == p_task_menu_dta->event))
+				case ST_MENU_2:
+					//actions - enter
+					if (EV_MEN_ENT_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->parameter==1)
 					{
-						p_task_menu_dta->flag = false;
-						p_task_menu_dta->state = ST_MEN_XX_IDLE;
+						p_task_menu_dta->state = ST_POWER;
+					}
+					if (EV_MEN_ENT_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->parameter==2)
+					{
+						p_task_menu_dta->state = ST_SPEED;
+					}
+					if (EV_MEN_ENT_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->parameter==3)
+					{
+						p_task_menu_dta->state = ST_SPIN;
+					}
+
+					// actions - next
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->parameter<3)
+					{
+						p_task_menu_dta->state = ST_MENU_2;
+						p_task_menu_dta->parameter ++ ;
+					}
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->parameter == 3)
+					{
+						p_task_menu_dta->state = ST_MENU_2;
+						p_task_menu_dta->parameter =1 ;
+					}
+
+					// actions - esc
+					if(EV_MEN_ESC_ACTIVE == p_task_menu_dta->event)
+					{
+						p_task_menu_dta->state = ST_MENU_1;
+					}
+
+				case ST_POWER:
+					// actions - next
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->power  )
+					{
+						p_task_menu_dta->power = false ;
+					}
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  !p_task_menu_dta->power  )
+					{
+						p_task_menu_dta->power = true ;
+					}
+
+					// actions - esc
+					if(EV_MEN_ESC_ACTIVE == p_task_menu_dta->event )
+					{
+						p_task_menu_dta->state = ST_MENU_2;
+					}
+
+					// actions - enter
+					if(EV_MEN_ENT_ACTIVE == p_task_menu_dta->event )
+					{
+						motors[p_task_menu_dta->id_motors].power = p_task_menu_dta->power;
+					}
+
+
+				case ST_SPEED :
+
+					// actions - next
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->speed < 9  )
+					{
+						p_task_menu_dta->speed ++ ;
+					}
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->speed >= 9 )
+					{
+						p_task_menu_dta->speed = 0 ;
+					}
+
+					// actions - esc
+					if(EV_MEN_ESC_ACTIVE == p_task_menu_dta->event )
+					{
+						p_task_menu_dta->state = ST_MENU_2;
+					}
+
+					// actions - enter
+					if(EV_MEN_ENT_ACTIVE == p_task_menu_dta->event )
+					{
+						motors[p_task_menu_dta->id_motors].speed = p_task_menu_dta->speed;
+					}
+
+
+				case ST_SPIN :
+
+					// actions - next
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->spin  )
+					{
+						p_task_menu_dta->spin = false ;
+					}
+					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  !p_task_menu_dta->spin )
+					{
+						p_task_menu_dta->spin = true ;
+					}
+
+					// actions - esc
+					if(EV_MEN_ESC_ACTIVE == p_task_menu_dta->event )
+					{
+						p_task_menu_dta->state = ST_MENU_2;
+					}
+
+					// actions - enter
+					if(EV_MEN_ENT_ACTIVE == p_task_menu_dta->event )
+					{
+						motors[p_task_menu_dta->id_motors].spin = p_task_menu_dta->spin;
 					}
 
 					break;

@@ -111,6 +111,19 @@ static void displayCodeWrite( bool type, uint8_t dataBus );
 void display_delay_us(uint32_t delay_us);
 
 //=====[Implementations of public functions]===================================
+void delay_us (uint32_t delay)
+{
+	uint32_t now,then;
+	now = cycle_counter_time_us();
+	then = now+delay;
+
+	while(now <  then)
+	{
+		now=cycle_counter_time_us();
+	}
+
+}
+
 void displayInit( displayConnection_t connection )
 {
     display.connection = connection;
