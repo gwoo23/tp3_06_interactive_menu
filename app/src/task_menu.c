@@ -70,7 +70,7 @@ typedef struct
 } motor_t;
 
 task_menu_dta_t task_menu_dta =
-	{DEL_MEN_XX_MIN, ST_MEN_XX_IDLE, EV_MEN_ENT_IDLE, false, 0, 1, false, 0, false};
+	{DEL_MEN_XX_MIN, ST_MENU_1, EV_MEN_ENT_IDLE, false, 0, 1, false, 0, false};
 
 #define MENU_DTA_QTY	(sizeof(task_menu_dta)/sizeof(task_menu_dta_t))
 
@@ -229,7 +229,6 @@ void task_menu_update(void *parameters)
 						p_task_menu_dta->state = ST_MENU_1;
 					}
 
-
 					break;
 
 				case ST_MENU_2:
@@ -265,6 +264,8 @@ void task_menu_update(void *parameters)
 						p_task_menu_dta->state = ST_MENU_1;
 					}
 
+					break;
+
 				case ST_POWER:
 					// actions - next
 					if(EV_MEN_NEX_ACTIVE == p_task_menu_dta->event &&  p_task_menu_dta->power  )
@@ -285,9 +286,10 @@ void task_menu_update(void *parameters)
 					// actions - enter
 					if(EV_MEN_ENT_ACTIVE == p_task_menu_dta->event )
 					{
-						motors[p_task_menu_dta->id_motors].power = p_task_menu_dta->power;
+						motors[p_task_menu_dta->id_motor].power = p_task_menu_dta->power;
 					}
 
+					break;
 
 				case ST_SPEED :
 
@@ -310,9 +312,10 @@ void task_menu_update(void *parameters)
 					// actions - enter
 					if(EV_MEN_ENT_ACTIVE == p_task_menu_dta->event )
 					{
-						motors[p_task_menu_dta->id_motors].speed = p_task_menu_dta->speed;
+						motors[p_task_menu_dta->id_motor].speed = p_task_menu_dta->speed;
 					}
 
+					break;
 
 				case ST_SPIN :
 
@@ -335,7 +338,7 @@ void task_menu_update(void *parameters)
 					// actions - enter
 					if(EV_MEN_ENT_ACTIVE == p_task_menu_dta->event )
 					{
-						motors[p_task_menu_dta->id_motors].spin = p_task_menu_dta->spin;
+						motors[p_task_menu_dta->id_motor].spin = p_task_menu_dta->spin;
 					}
 
 					break;
